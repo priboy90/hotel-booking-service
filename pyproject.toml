@@ -1,0 +1,76 @@
+[tool.poetry]
+name = "hotel-booking-service"
+version = "0.1.0"
+description = "Сервис для бронирования отелей"
+authors = [
+   "Evgen priboy90@mail.ru"
+]
+readme = "README.md"
+package-mode = false  # ← Режим package-mode отключен для нестандартной структуры проекта
+
+[tool.poetry.dependencies]
+# Основные зависимости для Django 5.2.6
+python = "^3.10"  # Django 5.2 требует Python 3.10 или выше. Используем современную версию.
+Django = "5.2.6"  # Конкретная версия Django 5.2.6 для стабильности
+djangorestframework = "^3.16"  # Последняя версия DRF, совместимая с Django 5.2
+psycopg2-binary = "^2.9.10"     # Актуальная версия бинарного драйвера PostgreSQL
+python-decouple = "^3.8"       # Для работы с переменными окружения
+gunicorn = "^23.0"             # Современная версия production WSGI-сервера
+
+[tool.poetry.group.dev.dependencies]
+# Инструменты разработки с актуальными версиями
+ruff = "^0.13.1"               # Последняя версия быстрого линтера и форматтера
+pre-commit = "^4.3"         # Актуальная версия фреймворка для pre-commit хуков
+pytest = "^8.4.2"             # Современная версия фреймворка для тестирования
+pytest-django = "^4.11.1"      # Плагин Pytest для Django, совместимый с Django 5.2
+pytest-factoryboy = "^2.8.1"  # Интеграция Factory Boy с Pytest
+pytest-cov = "^7.0.0"         # Плагин для измерения покрытия кода
+Faker = "^37.8.0"             # Актуальная версия библиотеки для генерации фейковых данных
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Настройки для ruff (линтер и форматтер)
+[tool.ruff]
+line-length = 120
+select = ["E", "F", "W", "I", "B", "C4", "UP"]
+ignore = ["E501", "C408"]
+target-version = "py310"  # Обновлено для Python 3.10 (требование Django 5.2)
+
+[tool.ruff.isort]
+known-first-party = ["core", "rooms", "bookings"]
+
+# Настройки pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+# Настройки coverage
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/admin.py",
+    "*/apps.py",
+    "*/asgi.py",
+    "*/wsgi.py",
+    "*/management/commands/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "def __str__",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if settings.DEBUG:",
+]
