@@ -1,0 +1,44 @@
+# Файл конфигурации pre-commit - автоматически запускает проверки перед коммитом кода в Git
+# Pre-commit framework (версия ^4.3 из pyproject.toml) обеспечивает единые стандарты качества
+
+repos:
+  # Репозиторий со стандартными хуками pre-commit - отдельный пакет с базовыми проверками
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    # Версия пакета pre-commit-hooks (4.5.0) - НЕ путать с версией pre-commit framework (4.3+)
+    # Это отдельный пакет с наборами хуков, совместимый с pre-commit framework 4.3+
+    rev: v4.5.0  # Версия пакета стандартных хуков, а не framework!
+    hooks:
+      # Удаляет лишние пробелы в конце строк - улучшает читаемость и соблюдает стиль кода
+      - id: trailing-whitespace
+      # Добавляет пустую строку в конце файла - стандартное требование POSIX и многих инструментов
+      - id: end-of-file-fixer
+      # Проверяет синтаксис YAML файлов - предотвращает ошибки в конфигурационных файлах
+      - id: check-yaml
+      # Проверяет, не добавляются ли большие файлы (>500KB) в репозиторий
+      - id: check-added-large-files
+      # Проверяет, что Python-синтаксис корректен - базовая проверка на валидность кода
+      - id: check-ast
+      # Проверяет, не осталось ли конфликтных маркеров слияния (>>>>, <<<<, ====)
+      - id: check-merge-conflict
+      # Проверяет синтаксис TOML файлов (включая pyproject.toml) - валидация конфигурации Poetry
+      - id: check-toml
+
+  # Репозиторий с хуками для Ruff - современного и быстрого линтера/форматтера
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Версия Ruff hooks, соответствующая версии Ruff из pyproject.toml (^0.13.1)
+    rev: v0.13.1  # Версия pre-commit хуков для Ruff
+    hooks:
+      # Запускает ruff для проверки кода и исправления автоматически исправимых ошибок
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      # Запускает ruff для форматирования кода - обеспечивает единый стиль
+      - id: ruff-format
+
+  # Репозиторий для автоматического обновления синтаксиса Django
+  - repo: https://github.com/adamchainz/django-upgrade
+    # Версия django-upgrade hooks, совместимая с Django 5.2.6
+    rev: 1.28.0  # Версия pre-commit хуков для django-upgrade
+    hooks:
+      - id: django-upgrade
+        # Указываем целевую версию Django 5.2 для преобразования синтаксиса
+        args: [--target-version, "5.2"]

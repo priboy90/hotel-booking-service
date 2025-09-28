@@ -1,0 +1,80 @@
+# docker-compose.yml - файл для определения и запуска многоконтейнерного приложения
+
+services:
+  # Сервис базы данных PostgreSQL - основное хранилище данных приложения
+  db:
+    # Официальный образ PostgreSQL версии 15 (стабильная и поддерживаемая версия)
+    image: postgres:15
+    env_file: .env  # ← Загружаем переменные из .env файла
+    # Переменные окружения для настройки PostgreSQL
+    environment:
+      # Имя базы данных, которая будет создана при первом запуске
+      POSTGRES_DB: ${POSTGRES_DB}
+      # Имя пользователя базы данных с правами суперпользователя
+      POSTGRES_USER: ${POSTGRES_USER}
+      # Пароль для пользователя базы данных (В PRODUCTION ЗАМЕНИТЬ НА СЕКРЕТЫ!)
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # Пробрасывание портов: порт 5432 контейнера -> порт 5432 хоста
+    # Позволяет подключаться к БД с локальной машины (для разработки и отладки)
+    ports:
+      - "5432:5432"
+    # Том для хранения данных PostgreSQL (сохраняет данные между перезапусками контейнеров)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    # Healthcheck - проверка здоровья сервиса (убеждаемся, что БД готова принимать подключения)
+    healthcheck:
+      # Команда проверки: pg_isready проверяет готовность PostgreSQL
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s        # Проверка каждые 5 секунд
+      timeout: 5s         # Таймаут на выполнение проверки - 5 секунд
+      retries: 5          # Количество попыток перед отметкой "unhealthy"
+
+  # Сервис Django-приложения - основной веб-сервер
+  web:
+    # Сборка образа из Dockerfile в текущей директории
+    build:
+      context: .          # Контекст сборки - текущая директория
+      dockerfile: Dockerfile  # Используемый Dockerfile (по умолчанию ищет Dockerfile)
+    # Команда запуска контейнера: запуск Django development сервера
+    # ОБНОВЛЕНО: Исправлен путь - manage.py должен быть в /app, а не /src
+    command: python manage.py runserver 0.0.0.0:8000
+    # Монтирование томов: синхронизация кода между хостом и контейнером
+    # .:/app - текущая директория хоста монтируется в /app контейнера
+    # Позволяет видеть изменения кода в реальном времени без пересборки
+    volumes:
+      - .:/app  # ← ИСПРАВЛЕНО: монтируем всю директорию проекта
+    working_dir: /app/src  # ← ДОБАВЛЕНО: рабочая директория для Django
+    # Пробрасывание портов: порт 8000 контейнера -> порт 8000 хоста
+    # Позволяет обращаться к приложению по http://localhost:8000
+    ports:
+      - "8000:8000"
+    # Переменные окружения для Django приложения
+    env_file: .env  # ← Загружаем переменные для web сервиса
+    environment:
+      - DEBUG=${DEBUG}  # Режим отладки (В PRODUCTION УСТАНОВИТЬ False!)
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      # URL для подключения к базе данных в формате: psql://user:password@host:port/dbname
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    # Зависимости между сервисами: web зависит от db
+    depends_on:
+      db:
+        condition: service_healthy  # Ждем, пока БД не станет здоровой
+    # Политика перезапуска: перезапускать контейнер всегда, если не остановлен явно
+    restart: unless-stopped
+
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+        interval: 30s
+        timeout: 10s
+        retries: 3
+        start_period: 10s
+
+# Определение томов (volumes) для хранения данных
+volumes:
+  # Том для хранения данных PostgreSQL
+  # Имя тома: postgres_data (Docker создаст его автоматически)
+  # Данные сохраняются между перезапусками контейнеров
+  postgres_data:
