@@ -43,15 +43,16 @@ RUN poetry config virtualenvs.create false
 # --no-root - не устанавливает сам проект (только зависимости)
 # --no-interaction - не задает интерактивных вопросов
 # --no-ansi - отключает цветной вывод (для чистоты логов)
-# ОБНОВЛЕНО: Устанавливаем ТОЛЬКО production зависимости (без dev-зависимостей)
-RUN poetry install --only main --no-interaction --no-ansi
+# Устанавливаем ВСЕ зависимости (включая dev-зависимости для тестов)
+RUN poetry install --no-interaction --no-ansi
 
-
+# Создаем директорию для результатов тестов
+RUN mkdir -p /app/test_results
 
 # Копируем весь исходный код проекта в контейнер
 # Копируем из src/ в /app, так как используется src-layout структура
 # ← ИСПРАВЛЕНО: Копируем из папки src, а не из корня
-COPY src/ .
+COPY . .
 
 
 # Открываем порт 8000 для доступа к Django приложению

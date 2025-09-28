@@ -1,0 +1,41 @@
+# docker-compose.test.yml - для запуска тестов
+
+services:
+  # Тестовая база данных
+  test_db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: test_hotel_booking
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_hotel_booking"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Сервис для запуска тестов
+  test_runner:
+    build:
+      context: .
+      dockerfile: DockerfileTest
+    command: >
+      sh -c "python wait_for_db.py &&
+                 python src/manage.py migrate &&
+                 PYTHONPATH=/app/src pytest tests/ -v --cov=src --cov-report=html"
+    environment:
+      DEBUG: "True"
+      SECRET_KEY: test-secret-key7h78opjjjjh987867
+      ALLOWED_HOSTS: '["localhost", "127.0.0.1", "testserver"]'  # ← JSON формат!
+      DATABASE_URL: postgresql://test_user:test_password@test_db:5432/test_hotel_booking
+      POSTGRES_HOST: test_db
+      POSTGRES_PORT: 5432
+    depends_on:
+      test_db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - ./test_results:/app/test_results
+    working_dir: /app

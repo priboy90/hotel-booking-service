@@ -48,3 +48,5 @@ poetry.lock
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+
+test_results

@@ -12,4 +12,4 @@ class Room(models.Model):
         ordering = ["-created_at"]  # Сортировка по умолчанию: новые сверху
 
     def __str__(self):
-        return f"Номер #{self.id} - {self.price} руб./ночь"
+        return f"Номер #{self.id} - {self.price:.2f} руб./ночь"

@@ -1,6 +1,4 @@
 # docker-compose.yml - файл для определения и запуска многоконтейнерного приложения
-# version: '3.8' - версия формата docker-compose файла (поддерживает все современные функции)
-version: '3.8'
 
 services:
   # Сервис базы данных PostgreSQL - основное хранилище данных приложения
@@ -44,7 +42,8 @@ services:
     # .:/app - текущая директория хоста монтируется в /app контейнера
     # Позволяет видеть изменения кода в реальном времени без пересборки
     volumes:
-      - ./src:/app
+      - .:/app  # ← ИСПРАВЛЕНО: монтируем всю директорию проекта
+    working_dir: /app/src  # ← ДОБАВЛЕНО: рабочая директория для Django
     # Пробрасывание портов: порт 8000 контейнера -> порт 8000 хоста
     # Позволяет обращаться к приложению по http://localhost:8000
     ports:
@@ -52,9 +51,9 @@ services:
     # Переменные окружения для Django приложения
     env_file: .env  # ← Загружаем переменные для web сервиса
     environment:
-      - DEBUG=${DJANGO_DEBUG}  # Режим отладки (В PRODUCTION УСТАНОВИТЬ False!)
-      - SECRET_KEY=${DJANGO_SECRET_KEY}
-      - ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+      - DEBUG=${DEBUG}  # Режим отладки (В PRODUCTION УСТАНОВИТЬ False!)
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       # URL для подключения к базе данных в формате: psql://user:password@host:port/dbname
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       - POSTGRES_HOST=db

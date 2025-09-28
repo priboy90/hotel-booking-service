@@ -14,7 +14,8 @@ python = "^3.10"  # Django 5.2 требует Python 3.10 или выше. Ис�
 Django = "5.2.6"  # Конкретная версия Django 5.2.6 для стабильности
 djangorestframework = "^3.16"  # Последняя версия DRF, совместимая с Django 5.2
 psycopg2-binary = "^2.9.10"     # Актуальная версия бинарного драйвера PostgreSQL
-python-decouple = "^3.8"       # Для работы с переменными окружения
+pydantic = "^2.5.0"           #  Для работы с переменными окружения
+pydantic-settings = "^2.1.0"  #  Для работы с переменными окружения
 gunicorn = "^23.0"             # Современная версия production WSGI-сервера
 
 [tool.poetry.group.dev.dependencies]
@@ -34,8 +35,8 @@ build-backend = "poetry.core.masonry.api"
 # Настройки для ruff (линтер и форматтер)
 [tool.ruff]
 line-length = 120
-select = ["E", "F", "W", "I", "B", "C4", "UP"]
-ignore = ["E501", "C408"]
+lint.select = ["E", "F", "W", "I", "B", "C4", "UP"]
+lint.ignore = ["E501", "C408"]
 target-version = "py310"  # Обновлено для Python 3.10 (требование Django 5.2)
 
 [tool.ruff.isort]
@@ -60,6 +61,7 @@ omit = [
     "*/asgi.py",
     "*/wsgi.py",
     "*/management/commands/*",
+    "src/manage.py",
 ]
 
 [tool.coverage.report]
